@@ -20,6 +20,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<UserCredential> credential = repository.findByUsername(username);
-        return credential.map(CustomUserDetails::new).orElseThrow(() -> new UsernameNotFoundException("user not found with name :" + username));
+
+        if (credential.isPresent()) {
+            return new CustomUserDetails(credential.get());
+        } else {
+            // Log the failed login attempt without revealing the specific reason
+            throw new UsernameNotFoundException("Invalid username or password.");
+        }
     }
 }
