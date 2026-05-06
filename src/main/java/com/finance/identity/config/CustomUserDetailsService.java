@@ -1,3 +1,20 @@
+package com.finance.identity.repository;
+
+import com.finance.identity.entity.UserCredential;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserCredentialRepository extends JpaRepository<UserCredential, Long> {
+
+    @Query("SELECT u FROM UserCredential u WHERE u.username = :username")
+    Optional<UserCredential> findByUsername(@Param("username") String username);
+}
+
 package com.finance.identity.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +36,15 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        if (username == null || username.trim().isEmpty()) {
+            throw new UsernameNotFoundException("Invalid username or password.");
+        }
+
         Optional<UserCredential> credential = repository.findByUsername(username);
 
         if (credential.isPresent()) {
             return new CustomUserDetails(credential.get());
         } else {
-            // Log the failed login attempt without revealing the specific reason
             throw new UsernameNotFoundException("Invalid username or password.");
         }
     }
